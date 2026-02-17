@@ -3,344 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pop Guinea Pig - Final</title>
+    <title>Super Pop Guinea Pig</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Kanit:wght@400;600&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-color: #ff9a9e;
+            --bg-gradient: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+            --text-shadow: 3px 3px 0px #00000020;
+        }
+
         body {
-            background-color: #b9f2ff;
+            background-image: var(--bg-gradient);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Fredoka One', 'Kanit', sans-serif;
             overflow: hidden;
             user-select: none;
-            -webkit-user-select: none;
-            cursor: crosshair;
-            transition: background-color 0.3s, transform 0.3s;
+            touch-action: manipulation; /* ช่วยเรื่องการตอบสนองบนมือถือ */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* โหมดคอมโบ (พื้นหลังเข้มขึ้น + ซูม) */
-        body.focus-mode {
-            background-color: #8ecae6;
-            transform: scale(1.05);
-        }
-        body.focus-mode::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            box-shadow: inset 0 0 150px rgba(0,0,0,0.6);
-            pointer-events: none;
+        /* ส่วนแสดงคะแนน */
+        .score-container {
+            text-align: center;
+            margin-bottom: 20px;
             z-index: 10;
         }
 
-        /* ปุ่มตั้งค่า */
-        .settings-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-        }
-        .gear-btn {
-            font-size: 40px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: transform 0.3s;
-        }
-        .gear-btn:hover { transform: rotate(90deg); }
-        .settings-menu {
-            display: none;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            margin-top: 5px;
-            text-align: left;
-            width: 180px;
-        }
-        .setting-item { margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        /* ตัวเลขและข้อความ */
         h1 {
             font-size: 80px;
-            margin: 10px 0;
-            color: #333;
-            text-shadow: 2px 2px 0px #fff;
-            z-index: 5;
-            pointer-events: none;
-        }
-        .combo-text {
-            font-size: 28px;
-            height: 40px;
-            color: #ff4500;
-            font-weight: bold;
-            text-shadow: 1px 1px 0 #fff;
-            z-index: 5;
-            pointer-events: none;
+            margin: 0;
+            color: #fff;
+            text-shadow: 4px 4px 0px #333;
+            line-height: 1;
         }
 
-        /* คอนเทนเนอร์รูปภาพ */
-        #guinea-pig-container {
+        .rank-badge {
+            font-family: 'Kanit', sans-serif;
+            font-size: 24px;
+            color: #555;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 20px;
+            border-radius: 20px;
+            margin-top: 10px;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* ตัวหนูตะเภา */
+        .guinea-container {
             position: relative;
-            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         #guinea-pig {
-            max-width: 80vw;
-            max-height: 50vh;
-            width: auto;
+            width: 350px;
+            max-width: 90vw;
             cursor: pointer;
+            transition: transform 0.05s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             -webkit-user-drag: none;
-            touch-action: manipulation;
-            transition: transform 0.05s ease-out;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
         }
 
-        /* Animation เด้งดึ๋ง */
-        .pop-effect { animation: squish 0.1s; }
-        @keyframes squish { 
-            0% { transform: scale(1); } 
-            50% { transform: scale(0.92, 0.96); } 
-            100% { transform: scale(1); } 
+        #guinea-pig.popped {
+            transform: scale(0.95);
         }
 
-        /* Animation สั่น */
-        .shaking { animation: shake 0.2s infinite; }
-        @keyframes shake { 
-            0% { transform: translate(1px, 1px) rotate(0deg); } 
-            25% { transform: translate(-1px, -2px) rotate(-1deg); } 
-            50% { transform: translate(1px, 0px) rotate(1deg); } 
-            75% { transform: translate(-1px, 1px) rotate(0deg); } 
-            100% { transform: translate(0px, -1px) rotate(0deg); } 
-        }
-
-        .credit { position: absolute; bottom: 20px; color: #666; font-size: 14px; pointer-events: none; }
-
-        /* Particles (เศษกระจาย) */
-        .particle {
+        /* เอฟเฟกต์ตัวเลขลอย (+1) */
+        .pop-number {
             position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
             pointer-events: none;
-            animation: fly-away 0.8s forwards;
-            z-index: 50;
+            text-shadow: 2px 2px 0 #000;
+            animation: floatUp 0.8s ease-out forwards;
         }
-        @keyframes fly-away {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
+
+        /* ปุ่มควบคุม (เสียง/รีเซ็ต) */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #ddd;
+            transition: transform 0.1s, box-shadow 0.1s;
+            color: #555;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #ddd;
+        }
+
+        .btn-reset { color: #ff6b6b; }
+        
+        /* Footer Credit */
+        .credit {
+            position: absolute;
+            bottom: 10px;
+            font-size: 12px;
+            color: #666;
+            opacity: 0.6;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="settings-container">
-        <button class="gear-btn" onclick="toggleMenu()">⚙️</button>
-        <div id="menu" class="settings-menu">
-            <div class="setting-item">
-                <span>SFX</span>
-                <label class="switch"><input type="checkbox" id="sfx-toggle" checked onchange="toggleSFX()"><span class="slider"></span></label>
-            </div>
-            <div class="setting-item">
-                <span>Music</span>
-                <label class="switch"><input type="checkbox" id="music-toggle" checked onchange="toggleMusic()"><span class="slider"></span></label>
-            </div>
-        </div>
+    <div class="score-container">
+        <h1 id="score">0</h1>
+        <div id="rank" class="rank-badge">ลูกหนูฝึกหัด 🐹</div>
     </div>
 
-    <h1 id="score">0</h1>
-    <div id="combo-display" class="combo-text"></div>
-
-    <div id="guinea-pig-container">
+    <div class="guinea-container" id="click-area">
         <img id="guinea-pig" src="picture/Guinea1.jpg" alt="Guinea Pig">
     </div>
 
-    <audio id="sound-click" src="sounds/clicks.mp3"></audio>       <audio id="sound-click2" src="sounds/clicks2.mp3"></audio>     <audio id="sound-bonus1" src="sounds/GuineapigsSound1.mp3"></audio>
-    <audio id="sound-bonus2" src="sounds/GuineapigsSound2.mp3"></audio>
-    <audio id="bg-music" src="BGsounds/Bgsound1.mp3" loop></audio>
+    <div class="controls">
+        <button class="btn" id="sound-btn">🔊 เปิดเสียง</button>
+        <button class="btn btn-reset" onclick="resetScore()">↺ รีเซ็ต</button>
+    </div>
+    
+    <div class="credit">Tap as fast as you can!</div>
 
-    <div class="credit">Tap & Hold to Pop!</div>
-
+    <audio id="pop-sound" src="sounds/clicks.mp3"></audio> 
     <script>
-        // --- ตัวแปร ---
-        const body = document.body;
+        // --- การตั้งค่าตัวแปร ---
         const guineaImg = document.getElementById('guinea-pig');
         const scoreElement = document.getElementById('score');
-        const comboDisplay = document.getElementById('combo-display');
-        const menu = document.getElementById('menu');
-
-        const bgMusic = document.getElementById('bg-music');
-        const soundClick = document.getElementById('sound-click');
-        const soundClick2 = document.getElementById('sound-click2');
-        const soundBonus1 = document.getElementById('sound-bonus1');
-        const soundBonus2 = document.getElementById('sound-bonus2');
+        const rankElement = document.getElementById('rank');
+        const clickArea = document.getElementById('click-area');
+        const popSoundSrc = document.getElementById('pop-sound').src;
+        const soundBtn = document.getElementById('sound-btn');
+        
+        // โหลดรูปภาพเตรียมไว้ใน Cache (Preload) เพื่อไม่ให้กระพริบ
+        const imgOpen = new Image(); imgOpen.src = "picture/Guinea2.jpg";
+        const imgClose = new Image(); imgClose.src = "picture/Guinea1.jpg";
 
         let score = parseInt(localStorage.getItem('popGuineaScore')) || 0;
-        scoreElement.innerText = score;
+        let isSoundOn = true;
+        let audioPool = []; // Pool สำหรับเก็บเสียงคลิกเพื่อเล่นซ้อนกันได้
 
-        let comboCount = 0;
-        let intervalId = null;
-        let isSfxOn = true;
-        let isMusicOn = true;
-        let isMusicPlaying = false;
+        // --- ระบบยศ (Ranks) ---
+        const ranks = [
+            { score: 0, title: "ลูกหนูฝึกหัด 🐹" },
+            { score: 100, title: "หนูนักกิน 🥕" },
+            { score: 500, title: "หนูติดสปีด ⚡" },
+            { score: 1000, title: "ราชาหนูตะเภา 👑" },
+            { score: 5000, title: "เทพเจ้าหนู 🌟" },
+            { score: 10000, title: "ตำนานแห่งจักรวาล 🌌" }
+        ];
+
+        // --- เริ่มต้นระบบ ---
+        updateDisplay();
         
-        let mouseX = window.innerWidth / 2;
-        let mouseY = window.innerHeight / 2;
-
-        // --- ติดตามเมาส์ตลอดเวลา เพื่อให้ particles แตกตามตำแหน่งเมาส์ ---
-        document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
-        document.addEventListener('touchmove', (e) => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; }, {passive: false});
-
-        // --- ฟังก์ชันจัดการระบบ ---
-        function toggleMenu() { menu.style.display = (menu.style.display === "block") ? "none" : "block"; }
-        function toggleSFX() { isSfxOn = document.getElementById('sfx-toggle').checked; }
-        function toggleMusic() {
-            isMusicOn = document.getElementById('music-toggle').checked;
-            if (isMusicOn && isMusicPlaying) bgMusic.play();
-            else bgMusic.pause();
+        // สร้าง Audio Pool (สร้างตัวเล่นเสียงเตรียมไว้ 10 ตัว)
+        for(let i=0; i<10; i++) {
+            audioPool.push(new Audio(popSoundSrc));
         }
 
-        function playSound(type) {
-            if (!isSfxOn) return;
-            let sound;
+        // --- ฟังก์ชันหลัก ---
+
+        function updateDisplay() {
+            scoreElement.innerText = score.toLocaleString(); // ใส่ลูกน้ำคั่นตัวเลข
             
-            if (type === 'click1') sound = soundClick;
-            else if (type === 'click2') sound = soundClick2;
-            else sound = Math.random() < 0.5 ? soundBonus1 : soundBonus2;
-
-            sound.currentTime = 0; // รีเซ็ตเสียงเพื่อให้เล่นรัวๆ ได้
-            sound.play().catch(()=>{});
-        }
-
-        function createParticles() {
-            const particleCount = 4;
-            const colors = ['#ffffff', '#ffaa00', '#5c3a21', '#ffcc00'];
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.left = mouseX + 'px'; // ใช้ตำแหน่งเมาส์ล่าสุด
-                particle.style.top = mouseY + 'px';
-                
-                const tx = (Math.random() - 0.5) * 150;
-                const ty = (Math.random() - 0.5) * 150;
-                particle.style.setProperty('--tx', `${tx}px`);
-                particle.style.setProperty('--ty', `${ty}px`);
-                
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 800);
+            // อัปเดตยศ
+            let currentRank = ranks[0].title;
+            for (let r of ranks) {
+                if (score >= r.score) currentRank = r.title;
             }
+            rankElement.innerText = currentRank;
         }
 
-        // --- ฟังก์ชันหลัก (ทำงานซ้ำๆ เมื่อกดค้าง) ---
-        function doPop() {
+        function playSound() {
+            if (!isSoundOn) return;
+            // หาตัวเล่นเสียงที่ว่างอยู่มาเล่น (เพื่อรองรับการกดรัวๆ)
+            const sound = audioPool.find(a => a.paused) || audioPool[0];
+            sound.currentTime = 0;
+            sound.play().catch(() => {}); // catch error กรณี browser บล็อก
+        }
+
+        function spawnParticle(x, y) {
+            const el = document.createElement('div');
+            el.innerText = "+1";
+            el.className = 'pop-number';
+            
+            // สุ่มตำแหน่งเล็กน้อยไม่ให้ซ้อนกันเป๊ะ
+            const randomX = (Math.random() - 0.5) * 40;
+            const randomY = (Math.random() - 0.5) * 40;
+            
+            el.style.left = (x + randomX) + 'px';
+            el.style.top = (y + randomY) + 'px';
+            
+            // คำนวณตำแหน่งสัมพัทธ์กับ clickArea
+            const rect = clickArea.getBoundingClientRect();
+            el.style.left = (x - rect.left) + 'px';
+            el.style.top = (y - rect.top) + 'px';
+
+            clickArea.appendChild(el);
+
+            // ลบ Element ทิ้งเมื่อเล่น Animation จบ
+            setTimeout(() => el.remove(), 800);
+        }
+
+        function pop(e) {
+            // Logic คะแนน
             score++;
-            comboCount++;
-            scoreElement.innerText = score;
             localStorage.setItem('popGuineaScore', score);
+            updateDisplay();
 
-            if (!isMusicPlaying && isMusicOn) {
-                bgMusic.volume = 0.5;
-                bgMusic.play().catch(() => {});
-                isMusicPlaying = true;
-            }
+            // Visual เปลี่ยนรูป
+            guineaImg.src = imgOpen.src;
+            guineaImg.classList.add('popped');
 
-            // เอฟเฟกต์แตกกระจาย
-            createParticles();
-            
-            // Animation เด้งดึ๋ง
-            guineaImg.classList.remove('pop-effect');
-            void guineaImg.offsetWidth; // บังคับให้ browser วาดใหม่
-            guineaImg.classList.add('pop-effect');
+            // Audio
+            playSound();
 
-            // --- ตรวจสอบเงื่อนไขเสียงและภาพ ---
-            
-            if (comboCount > 10) {
-                // >>> เข้าโหมดคอมโบ <<<
-                
-                body.classList.add('focus-mode'); // ซูมจอ
-                comboDisplay.innerText = "COMBO x" + comboCount + " 🔥";
-                
-                // 1. เสียง: ใช้ Click 2 ทันที (แม้จะกดค้างอยู่ก็จะเปลี่ยนเป็นเสียงนี้)
-                playSound('click2'); 
-
-                // 2. การเปลี่ยนรูป: เปลี่ยนทุกๆ 30 ครั้ง (30, 60, 90...)
-                if (comboCount % 30 === 0) {
-                    const randomPic = Math.floor(Math.random() * 6) + 2; 
-                    guineaImg.src = `picture/Guinea${randomPic}.jpg`;
-                    
-                    playSound('bonus'); // ร้องเสียงหนูเฉพาะตอนเปลี่ยนรูป
-                } 
-                // ถ้ายังไม่ถึงรอบเปลี่ยนรูป และไม่ใช่รูปเริ่มต้น ให้คงรูปเดิมไว้ (ตามที่เปลี่ยนไปเมื่อรอบ 30 ที่แล้ว)
-                else if (comboCount < 30) {
-                    guineaImg.src = "picture/Guinea2.jpg"; 
-                }
-
-                guineaImg.classList.add('shaking'); // สั่นตลอดเวลา
-
+            // Effect (+1)
+            // ถ้าเป็นการกดจาก Mouse/Touch ให้ใช้ตำแหน่งนั้น ถ้ากด Keyboard ให้สุ่มกลางภาพ
+            let clientX, clientY;
+            if (e && (e.type === 'mousedown' || e.type === 'touchstart' || e.type === 'pointerdown')) {
+                // รองรับทั้ง Mouse และ Touch
+                clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                clientY = e.clientY || (e.touches && e.touches[0].clientY);
             } else {
-                // >>> โหมดปกติ (1-10) <<<
-                
-                body.classList.remove('focus-mode');
-                comboDisplay.innerText = "";
-                
-                playSound('click1'); // ใช้เสียง Click 1
-                guineaImg.src = "picture/Guinea2.jpg"; 
-                guineaImg.classList.remove('shaking');
+                // กรณีใช้คีย์บอร์ด
+                const rect = guineaImg.getBoundingClientRect();
+                clientX = rect.left + rect.width / 2;
+                clientY = rect.top + rect.height / 3;
+            }
+            spawnParticle(clientX, clientY);
+        }
+
+        function unpop() {
+            guineaImg.src = imgClose.src;
+            guineaImg.classList.remove('popped');
+        }
+
+        function resetScore() {
+            if(confirm("ต้องการรีเซ็ตคะแนนเป็น 0 ใช่ไหม?")) {
+                score = 0;
+                localStorage.setItem('popGuineaScore', 0);
+                updateDisplay();
             }
         }
 
-        // --- ระบบกดค้าง (Loop) ---
-        function startHolding(e) {
-            // ป้องกันการเลือกข้อความ หรือกดปุ่มเมนูแล้วเกมทำงาน
-            if (e.cancelable && e.target.id !== 'sfx-toggle' && e.target.id !== 'music-toggle') { e.preventDefault(); }
-            if (e.target.closest('.settings-container')) return;
+        // --- Event Listeners (ระบบควบคุม) ---
 
-            if (intervalId) return;
-
-            // อัปเดตตำแหน่งเมาส์ตอนเริ่มกดทันที
-            if (e.clientX) { mouseX = e.clientX; mouseY = e.clientY; }
-            else if (e.touches) { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; }
-
-            doPop(); // ทำงานครั้งแรกทันที
-            intervalId = setInterval(doPop, 90); // สั่งให้ doPop ทำงานรัวๆ ทุก 90ms
-        }
-
-        function stopHolding() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-            comboCount = 0; // รีเซ็ตคอมโบ
-            comboDisplay.innerText = "";
-            
-            // คืนค่ารูปและเอฟเฟกต์
-            guineaImg.src = "picture/Guinea1.jpg";
-            guineaImg.classList.remove('shaking');
-            guineaImg.classList.remove('pop-effect');
-            body.classList.remove('focus-mode');
-        }
-
-        // Events
-        guineaImg.addEventListener('mousedown', startHolding);
-        document.addEventListener('mouseup', stopHolding);
-        
-        guineaImg.addEventListener('touchstart', startHolding, {passive: false});
-        document.addEventListener('touchend', stopHolding);
-
-        // Keyboard (เผื่อใช้)
-        document.addEventListener('keydown', (e) => {
-            if (e.repeat) return;
-            if (e.code === 'Space' || e.code === 'Enter') startHolding(e);
+        // ใช้ Pointer Events เพื่อรองรับทั้ง Mouse, Touch, Pen ในโค้ดเดียว
+        guineaImg.addEventListener('pointerdown', (e) => {
+            e.preventDefault(); // ป้องกันการเลือกรูป
+            pop(e);
         });
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'Space' || e.code === 'Enter') stopHolding();
+
+        guineaImg.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            unpop();
+        });
+
+        guineaImg.addEventListener('pointerleave', unpop);
+
+        // ระบบ Keyboard (กดปุ่มไหนก็ได้)
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return; // ป้องกันการกดค้าง
+            pop();
+        });
+
+        document.addEventListener('keyup', unpop);
+
+        // ปุ่มเปิด/ปิดเสียง
+        soundBtn.addEventListener('click', () => {
+            isSoundOn = !isSoundOn;
+            soundBtn.innerText = isSoundOn ? "🔊 เปิดเสียง" : "🔇 ปิดเสียง";
         });
 
     </script>
